@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>JJKDLE — Guess the JJK Character</title>
+<style>
+:root{
+  --bg:#08080d; --panel:#11121a; --panel2:#181a25; --text:#f5f5f7;
+  --muted:#9699a8; --line:#2a2d3a; --green:#39c56b; --yellow:#d9b63f;
+  --red:#d64b5b; --purple:#8f65ff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:radial-gradient(circle at 50% -10%,#241844 0,#0b0b11 42%,#07070b 100%);
+  color:var(--text); display:flex; justify-content:center;
+}
+.app{width:min(760px,100%); padding:20px 16px 40px}
+header{text-align:center;border-bottom:1px solid var(--line);padding:8px 0 18px;position:relative}
+.logo{font-weight:900;letter-spacing:3px;font-size:34px}
+.logo span{color:var(--purple)}
+.subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+.stats{display:flex;justify-content:center;gap:10px;margin:16px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 15px;min-width:92px}
+.stat b{display:block;font-size:18px}.stat small{color:var(--muted)}
+.hint{background:linear-gradient(135deg,#151322,#10111a);border:1px solid #30284c;border-radius:14px;padding:13px 15px;margin-bottom:14px;text-align:center}
+.hint b{color:#c4a9ff}.hint span{color:var(--muted);font-size:13px}
+.inputrow{display:flex;gap:8px;margin-bottom:12px}
+input{
+ flex:1;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:11px;
+ padding:14px;font-size:16px;outline:none;
+}
+input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #8f65ff18}
+button{
+ background:var(--purple);border:0;color:white;font-weight:800;border-radius:11px;padding:0 20px;
+ cursor:pointer;font-size:14px;
+}
+button:hover{filter:brightness(1.1)} button:disabled{opacity:.45;cursor:not-allowed}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
+.suggestions button{background:#202131;border:1px solid #303346;padding:7px 10px;font-weight:600}
+.board{overflow-x:auto;border-radius:12px}
+.row{display:grid;grid-template-columns:1.55fr repeat(6,1fr);gap:5px;margin-bottom:5px;min-width:620px}
+.cell{
+ min-height:52px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+ display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:12px;font-weight:700;
+}
+.cell.name{justify-content:flex-start;padding-left:10px;font-size:14px}
+.head .cell{background:transparent;border:0;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.correct{background:#176532!important;border-color:#2c9b54!important}
+.close{background:#75621c!important;border-color:#b29631!important}
+.wrong{background:#242631!important;color:#858897}
+.legend{display:flex;justify-content:center;gap:15px;color:var(--muted);font-size:11px;margin:16px 0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}.g{background:var(--green)}.y{background:var(--yellow)}.x{background:#30333e}
+.message{text-align:center;min-height:26px;margin:12px 0;font-weight:700}
+.help{text-align:center;color:var(--muted);font-size:12px;margin-top:16px}
+.modal{
+ position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px;z-index:5
+}
+.modalbox{width:min(440px,100%);background:#12131c;border:1px solid #343748;border-radius:18px;padding:24px;text-align:center;box-shadow:0 20px 70px #000}
+.modalbox h2{margin-top:0}.answer{font-size:30px;font-weight:900;color:#b99dff;margin:12px}
+.share{width:100%;height:46px;margin-top:12px}
+.closebtn{background:#292b38;margin-top:8px;width:100%;height:42px}
+@media(max-width:600px){
+  .app{width:100%;padding:10px 10px 28px}
+  .logo{font-size:27px}
+  .subtitle{font-size:12px}
+  .stats{gap:6px;margin:12px 0}
+  .stat{min-width:0;flex:1;padding:7px 5px}
+  .stat b{font-size:17px}
+  .hint{font-size:13px;padding:11px}
+  .inputrow{gap:6px}
+  input{min-width:0;font-size:16px;padding:13px 11px}
+  #guessBtn{padding:0 14px;min-width:82px}
+  .suggestions{display:none}
+  .board{margin:0 -10px;padding:0 10px}
+  .row{min-width:0;grid-template-columns:1.35fr repeat(6,minmax(62px,1fr));gap:4px}
+  .cell{min-height:48px;font-size:10px;padding:4px}
+  .cell.name{font-size:11px;padding-left:6px}
+  .head .cell{font-size:8px}
+  .legend{gap:9px;font-size:10px}
+  .modalbox{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">JJK<span>DLE</span></div>
+  <div class="subtitle">Guess the Jujutsu Kaisen character.</div>
+</header>
+
+<div class="stats">
+  <div class="stat"><b id="streak">0</b><small>Streak</small></div>
+  <div class="stat"><b id="wins">0</b><small>Wins</small></div>
+  <div class="stat"><b id="tries">6</b><small>Guesses left</small></div>
+</div>
+
+<div class="hint">
+  <b>HOW TO PLAY</b><br>
+  <span>Guess a character. 🟩 exact match · 🟨 close · ⬛ doesn't match.</span>
+</div>
+
+<div class="inputrow">
+  <input id="guessInput" list="characters" placeholder="Type a character..." autocomplete="off" autocapitalize="words" enterkeyhint="go">
+  <datalist id="characters"></datalist>
+  <button id="guessBtn">GUESS</button>
+</div>
+<div class="suggestions" id="suggestions"></div>
+<div id="mobileTip" style="display:none;text-align:center;color:#888b9a;font-size:11px;margin:-4px 0 10px">
+  Type a first name or last name, then tap GUESS.
+</div>
+
+<div class="board">
+  <div class="row head">
+    <div class="cell">Character</div><div class="cell">Gender</div><div class="cell">Side</div>
+    <div class="cell">Grade</div><div class="cell">Technique</div><div class="cell">Era</div><div class="cell">Alive?</div>
+  </div>
+  <div id="rows"></div>
+</div>
+
+<div class="legend">
+  <span><i class="dot g"></i>Match</span>
+  <span><i class="dot y"></i>Related / close</span>
+  <span><i class="dot x"></i>Doesn't match</span>
+</div>
+<div class="message" id="message"></div>
+<div class="help">A new character is selected each day. Your progress is saved in this browser.</div>
+</div>
+
+<div class="modal" id="modal">
+ <div class="modalbox">
+   <h2 id="resultTitle">YOU GOT IT!</h2>
+   <div>The character was</div>
+   <div class="answer" id="answer"></div>
+   <div id="resultInfo" style="color:#a6a8b5"></div>
+   <button class="share" id="shareBtn">COPY RESULT</button>
+   <button class="closebtn" id="closeBtn">CLOSE</button>
+ </div>
+</div>
+
+<script>
+const chars = [
+ {name:"Yuji Itadori",gender:"Male",side:"Jujutsu",grade:"Grade 1",tech:"Divergent Fist",era:"Modern",alive:"Yes"},
+ {name:"Megumi Fushiguro",gender:"Male",side:"Jujutsu",grade:"Grade 2",tech:"Ten Shadows",era:"Modern",alive:"Yes"},
+ {name:"Nobara Kugisaki",gender:"Female",side:"Jujutsu",grade:"Grade 3",tech:"Straw Doll",era:"Modern",alive:"Yes"},
+ {name:"Satoru Gojo",gender:"Male",side:"Jujutsu",grade:"Special Grade",tech:"Limitless",era:"Modern",alive:"No"},
+ {name:"Suguru Geto",gender:"Male",side:"Curse User",grade:"Special Grade",tech:"Cursed Spirit Manipulation",era:"Modern",alive:"No"},
+ {name:"Yuta Okkotsu",gender:"Male",side:"Jujutsu",grade:"Special Grade",tech:"Copy",era:"Modern",alive:"Yes"},
+ {name:"Maki Zenin",gender:"Female",side:"Jujutsu",grade:"Grade 4",tech:"Heavenly Restriction",era:"Modern",alive:"Yes"},
+ {name:"Toge Inumaki",gender:"Male",side:"Jujutsu",grade:"Semi-Grade 1",tech:"Cursed Speech",era:"Modern",alive:"Yes"},
+ {name:"Panda",gender:"Male",side:"Jujutsu",grade:"Grade 2",tech:"Cursed Corpse",era:"Modern",alive:"Yes"},
+ {name:"Kento Nanami",gender:"Male",side:"Jujutsu",grade:"Grade 1",tech:"Ratio",era:"Modern",alive:"No"},
+ {name:"Aoi Todo",gender:"Male",side:"Jujutsu",grade:"Grade 1",tech:"Boogie Woogie",era:"Modern",alive:"Yes"},
+ {name:"Mai Zenin",gender:"Female",side:"Jujutsu",grade:"Grade 3",tech:"Construction",era:"Modern",alive:"No"},
+ {name:"Toji Fushiguro",gender:"Male",side:"Curse User",grade:"None",tech:"Heavenly Restriction",era:"Modern",alive:"No"},
+ {name:"Choso",gender:"Male",side:"Curse User",grade:"Special Grade",tech:"Blood Manipulation",era:"Modern",alive:"No"},
+ {name:"Mahito",gender:"Male",side:"Curses",grade:"Special Grade",tech:"Idle Transfiguration",era:"Modern",alive:"No"},
+ {name:"Jogo",gender:"Male",side:"Curses",grade:"Special Grade",tech:"Disaster Flames",era:"Modern",alive:"No"},
+ {name:"Hanami",gender:"Unknown",side:"Curses",grade:"Special Grade",tech:"Disaster Plants",era:"Modern",alive:"No"},
+ {name:"Dagon",gender:"Male",side:"Curses",grade:"Special Grade",tech:"Disaster Tides",era:"Modern",alive:"No"},
+ {name:"Sukuna",gender:"Male",side:"Curse User",grade:"Special Grade",tech:"Shrine",era:"Heian",alive:"Yes"},
+ {name:"Uraume",gender:"Unknown",side:"Curse User",grade:"Special Grade",tech:"Ice Formation",era:"Heian",alive:"Yes"},
+ {name:"Kenjaku",gender:"Unknown",side:"Curse User",grade:"Special Grade",tech:"Cursed Spirit Manipulation",era:"Ancient",alive:"No"},
+ {name:"Kokichi Muta",gender:"Male",side:"Jujutsu",grade:"Grade 1",tech:"Puppet Manipulation",era:"Modern",alive:"No"},
+ {name:"Kasumi Miwa",gender:"Female",side:"Jujutsu",grade:"Grade 3",tech:"New Shadow Style",era:"Modern",alive:"Yes"},
+ {name:"Mei Mei",gender:"Female",side:"Jujutsu",grade:"Grade 1",tech:"Black Bird Manipulation",era:"Modern",alive:"Yes"},
+ {name:"Naobito Zenin",gender:"Male",side:"Jujutsu",grade:"Special Grade",tech:"Projection Sorcery",era:"Modern",alive:"No"},
+ {name:"Naoya Zenin",gender:"Male",side:"Curse User",grade:"Special Grade",tech:"Projection Sorcery",era:"Modern",alive:"No"},
+ {name:"Hajime Kashimo",gender:"Male",side:"Curse User",grade:"Special Grade",tech:"Mythical Beast Amber",era:"Heian",alive:"No"},
+ {name:"Kinji Hakari",gender:"Male",side:"Jujutsu",grade:"Special Grade",tech:"Idle Death Gamble",era:"Modern",alive:"Yes"},
+ {name:"Kirara Hoshi",gender:"Unknown",side:"Jujutsu",grade:"Unknown",tech:"Love Rendezvous",era:"Modern",alive:"Yes"},
+ {name:"Takuma Ino",gender:"Male",side:"Jujutsu",grade:"Grade 2",tech:"Auspicious Beasts",era:"Modern",alive:"Yes"}
+];
+
+const key = "jjkdle-"+new Date().toISOString().slice(0,10);
+let saved = JSON.parse(localStorage.getItem("jjkdle-state") || '{"streak":0,"wins":0}');
+let game = JSON.parse(localStorage.getItem(key) || "null");
+let answer = game ? chars.find(c=>c.name===game.answer) : chars[Math.floor(Math.random()*chars.length)];
+if(!game){game={answer:answer.name,guesses:[],done:false};localStorage.setItem(key,JSON.stringify(game));}
+answer=chars.find(c=>c.name===game.answer)||answer;
+
+const $=id=>document.getElementById(id);
+$("streak").textContent=saved.streak; $("wins").textContent=saved.wins;
+if(window.matchMedia("(max-width:600px)").matches) $("mobileTip").style.display="block";
+$("tries").textContent=Math.max(0,6-game.guesses.length);
+chars.forEach(c=>{let o=document.createElement("option");o.value=c.name;$("characters").appendChild(o)});
+const sugg=["Gojo","Yuji","Megumi","Sukuna","Yuta","Nobara"];
+sugg.forEach(x=>{let c=chars.find(c=>c.name.startsWith(x)); if(c){let b=document.createElement("button");b.textContent=c.name;b.onclick=()=>{$("guessInput").value=c.name;$("guessInput").focus()};$("suggestions").appendChild(b)}});
+
+function norm(s){return s.toLowerCase().replace(/[^a-z0-9]/g,"")}
+function findCharacter(raw){
+ const q=norm(raw);
+ if(!q)return null;
+ // Full name, first name, last name, or common nickname/alias.
+ let exact=chars.find(c=>norm(c.name)===q);
+ if(exact)return exact;
+ let matches=chars.filter(c=>{
+   const parts=c.name.split(" ").map(norm);
+   return parts.some(part=>part===q);
+ });
+ if(matches.length===1)return matches[0];
+ const aliases={
+   gojo:"Satoru Gojo", yuji:"Yuji Itadori", itadori:"Yuji Itadori",
+   megumi:"Megumi Fushiguro", fushiguro:"Megumi Fushiguro",
+   nobara:"Nobara Kugisaki", kugisaki:"Nobara Kugisaki",
+   geto:"Suguru Geto", suguru:"Suguru Geto",
+   yuta:"Yuta Okkotsu", okkotsu:"Yuta Okkotsu",
+   maki:"Maki Zenin", zenin:"Maki Zenin",
+   inumaki:"Toge Inumaki", toge:"Toge Inumaki",
+   nanami:"Kento Nanami", kento:"Kento Nanami",
+   todo:"Aoi Todo", aoi:"Aoi Todo",
+   toji:"Toji Fushiguro", sukuna:"Sukuna",
+   mahito:"Mahito", jogo:"Jogo", hanami:"Hanami", dagon:"Dagon",
+   choso:"Choso", kenjaku:"Kenjaku", hakari:"Kinji Hakari",
+   kashimo:"Hajime Kashimo", uraume:"Uraume", panda:"Panda",
+   mei:"Mei Mei", naobito:"Naobito Zenin", naoya:"Naoya Zenin",
+   miwa:"Kasumi Miwa", ino:"Takuma Ino", kokichi:"Kokichi Muta",
+   muta:"Kokichi Muta", mai:"Mai Zenin", kirara:"Kirara Hoshi"
+ };
+ return aliases[q] ? chars.find(c=>c.name===aliases[q]) : null;
+}
+function status(a,b){
+ if(a===b)return "correct";
+ const close={gender:["Male","Female"],side:["Jujutsu","Curse User","Curses"],grade:["Grade 2","Grade 3","Grade 1","Semi-Grade 1","Grade 4","Special Grade","None","Unknown"],
+ tech:["Divergent Fist","Heavenly Restriction","Projection Sorcery","Cursed Spirit Manipulation","Blood Manipulation","New Shadow Style","Copy"],
+ era:["Modern","Heian","Ancient"],alive:["Yes","No"]};
+ return (close[b]||[]).includes(a) ? "close" : "wrong";
+}
+function addGuess(c){
+ const row=document.createElement("div"); row.className="row";
+ const vals=[c.name,c.gender,c.side,c.grade,c.tech,c.era,c.alive];
+ vals.forEach((v,i)=>{const cell=document.createElement("div");cell.className="cell "+(i===0?"name ":"")+status(v,[answer.name,answer.gender,answer.side,answer.grade,answer.tech,answer.era,answer.alive][i]);cell.textContent=v;row.appendChild(cell)});
+ $("rows").appendChild(row);
+}
+game.guesses.forEach(n=>{let c=chars.find(c=>c.name===n);if(c)addGuess(c)});
+if(game.done) finish(game.guesses.includes(answer.name));
+
+function guess(){
+ if(game.done||game.guesses.length>=6)return;
+ const raw=$("guessInput").value.trim();
+ const c=findCharacter(raw);
+ if(!c){$("message").textContent="Character not found. Try a first name, last name, or full name.";return}
+ if(game.guesses.includes(c.name)){$("message").textContent="You already guessed that character.";return}
+ game.guesses.push(c.name); addGuess(c); $("guessInput").value="";
+ $("tries").textContent=Math.max(0,6-game.guesses.length);
+ localStorage.setItem(key,JSON.stringify(game));
+ if(c.name===answer.name){game.done=true;localStorage.setItem(key,JSON.stringify(game));saved.wins++;saved.streak++;localStorage.setItem("jjkdle-state",JSON.stringify(saved));$("streak").textContent=saved.streak;$("wins").textContent=saved.wins;finish(true)}
+ else if(game.guesses.length>=6){game.done=true;localStorage.setItem(key,JSON.stringify(game));saved.streak=0;localStorage.setItem("jjkdle-state",JSON.stringify(saved));$("streak").textContent=0;finish(false)}
+ else $("message").textContent="Good guess. Keep going!";
+}
+function finish(win){
+ $("modal").style.display="flex";
+ $("resultTitle").textContent=win?"DOMAIN EXPANSION!":"BETTER LUCK NEXT TIME";
+ $("answer").textContent=answer.name;
+ $("resultInfo").textContent=win?`Solved in ${game.guesses.length}/6 guesses.`:`The answer was ${answer.name}.`;
+ $("message").textContent=win?"You got the character!":"Game over.";
+}
+$("guessBtn").onclick=guess;
+$("guessInput").addEventListener("keydown",e=>{if(e.key==="Enter")guess()});
+$("closeBtn").onclick=()=>$("modal").style.display="none";
+$("shareBtn").onclick=async()=>{
+ const squares=game.guesses.map(n=>n===answer.name?"🟩":"🟥").join("");
+ const text=`JJKDLE ${game.guesses.length}/6\n${squares}\nGuess the JJK character!`;
+ try{await navigator.clipboard.writeText(text);$("shareBtn").textContent="COPIED!"}catch{$("shareBtn").textContent=text}
+};
+</script>
+</body>
+</html>
