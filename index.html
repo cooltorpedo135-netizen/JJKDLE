@@ -41,7 +41,7 @@ button:hover{filter:brightness(1.1)} button:disabled{opacity:.45;cursor:not-allo
 .suggestions{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
 .suggestions button{background:#202131;border:1px solid #303346;padding:7px 10px;font-weight:600}
 .board{overflow-x:auto;border-radius:12px}
-.row{display:grid;grid-template-columns:1.55fr repeat(6,1fr);gap:5px;margin-bottom:5px;min-width:620px}
+.row{display:grid;grid-template-columns:1.35fr repeat(7,minmax(0,1fr));gap:5px;margin-bottom:5px;min-width:620px}
 .cell{
  min-height:52px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
  display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:12px;font-weight:700;
@@ -75,7 +75,7 @@ button:hover{filter:brightness(1.1)} button:disabled{opacity:.45;cursor:not-allo
   #guessBtn{padding:0 14px;min-width:82px}
   .suggestions{display:none}
   .board{margin:0 -10px;padding:0 10px}
-  .row{min-width:0;grid-template-columns:1.35fr repeat(6,minmax(62px,1fr));gap:4px}
+  .row{min-width:0;grid-template-columns:1.35fr repeat(7,minmax(62px,1fr));gap:4px}
   .cell{min-height:48px;font-size:10px;padding:4px}
   .cell.name{font-size:11px;padding-left:6px}
   .head .cell{font-size:8px}
@@ -242,8 +242,8 @@ function status(a,b){
 }
 function addGuess(c){
  const row=document.createElement("div"); row.className="row";
- const vals=[c.name,c.gender,c.side,c.grade,c.tech,c.era,c.alive];
- vals.forEach((v,i)=>{const cell=document.createElement("div");cell.className="cell "+(i===0?"name ":"")+status(v,[answer.name,answer.gender,answer.side,answer.grade,answer.tech,answer.era,answer.alive][i]);cell.textContent=v;row.appendChild(cell)});
+ const vals=[c.name,c.gender,c.side,c.grade,c.tech,c.era,c.alive,c.ark];
+ vals.forEach((v,i)=>{const cell=document.createElement("div");cell.className="cell "+(i===0?"name ":"")+status(v,[answer.name,answer.gender,answer.side,answer.grade,answer.tech,answer.era,answer.alive,answer.ark][i]);cell.textContent=v;row.appendChild(cell)});
  $("rows").appendChild(row);
 }
 game.guesses.forEach(n=>{let c=chars.find(c=>c.name===n);if(c)addGuess(c)});
